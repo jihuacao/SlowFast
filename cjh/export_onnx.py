@@ -21,12 +21,6 @@ def parser_args():
         help="Path to the config file",
     )
     parser.add_argument(
-        '--half',
-        type=bool,
-        default=False,
-        help='use half mode',
-    )
-    parser.add_argument(
         '--checkpoint',
         type=str,
         default=os.path.join(work_root,
@@ -39,6 +33,18 @@ def parser_args():
         default=os.path.join(work_root, "/content/SLOWFAST_head.onnx"),
         help='save model file path',
     )
+    parser.add_argument(
+        '--max_object',
+        type=int,
+        default=32,
+        help='max amount object of person'
+    )
+    parser.add_argument(
+        '--half',
+        type=bool,
+        default=False,
+        help='use half mode',
+    )
     return parser.parse_args()
 
 
@@ -49,6 +55,7 @@ def main():
     checkpoint_file = args.checkpoint
     save_checkpoint_file = args.save
     half_flag = args.half
+    max_object = args.max_object
     cfg = get_cfg()
     cfg.merge_from_file(cfg_file)
     cfg.TEST.CHECKPOINT_FILE_PATH = checkpoint_file
@@ -64,7 +71,7 @@ def main():
             model.half()
         fast_pathway= torch.randn(1, 3, 32, 256, 455)
         slow_pathway= torch.randn(1, 3, 8, 256, 455)
-        bbox=torch.randn(32,5).to(device)
+        bbox=torch.randn(max_object, 5).to(device)
         fast_pathway = fast_pathway.to(device)
         slow_pathway = slow_pathway.to(device)
         inputs = [slow_pathway, fast_pathway]
