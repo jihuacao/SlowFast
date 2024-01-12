@@ -4,7 +4,6 @@ from collections import OrderedDict
 import torch
 import argparse
 work_root = os.path.split(os.path.realpath(__file__))[0]
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from slowfast.config.defaults import get_cfg
 import slowfast.utils.checkpoint as cu
 from slowfast.models import build_model
@@ -40,6 +39,24 @@ def parser_args():
         help='max amount object of person'
     )
     parser.add_argument(
+        '--height',
+        type=int,
+        default=256,
+        help='max amount object of person'
+    )
+    parser.add_argument(
+        '--width',
+        type=int,
+        default=455,
+        help='max amount object of person'
+    )
+    parser.add_argument(
+        '--device',
+        type=str,
+        default="cuda:0",
+        help='max amount object of person'
+    )
+    parser.add_argument(
         '--half',
         type=bool,
         default=False,
@@ -56,12 +73,14 @@ def main():
     save_checkpoint_file = args.save
     half_flag = args.half
     max_object = args.max_object
+    height = args.height
+    width = args.width
     cfg = get_cfg()
     cfg.merge_from_file(cfg_file)
     cfg.TEST.CHECKPOINT_FILE_PATH = checkpoint_file
     print(cfg.DATA)
     print("export pytorch model to onnx!\n")
-    device = "cuda:0"
+    device = args.device
     with torch.no_grad():
         model = build_model(cfg)
         model = model.to(device)
@@ -69,8 +88,8 @@ def main():
         cu.load_test_checkpoint(cfg, model)
         if half_flag:
             model.half()
-        fast_pathway= torch.randn(1, 3, 32, 256, 455)
-        slow_pathway= torch.randn(1, 3, 8, 256, 455)
+        fast_pathway= torch.randn(1, 3, 32, height, width)
+        slow_pathway= torch.randn(1, 3, 8, height, width)
         bbox=torch.randn(max_object, 5).to(device)
         fast_pathway = fast_pathway.to(device)
         slow_pathway = slow_pathway.to(device)
